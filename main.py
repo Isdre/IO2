@@ -17,7 +17,19 @@ actions = {
     "move_T1_B_C": Strips("move_T1_B_C", {"at": {"T1": "B"}}, {"at": {"T1": "C"}}),
     "move_T1_B_D": Strips("move_T1_B_D", {"at": {"T1": "B"}}, {"at": {"T1": "D"}}),
     "move_T1_B_E": Strips("move_T1_B_E", {"at": {"T1": "B"}}, {"at": {"T1": "E"}}),
-    # Dodaj więcej kombinacji ruchów dla T1 i T2...
+    "move_T1_C_A": Strips("move_T1_C_A", {"at": {"T1": "C"}}, {"at": {"T1": "A"}}),
+    "move_T1_C_B": Strips("move_T1_C_B", {"at": {"T1": "C"}}, {"at": {"T1": "B"}}),
+    "move_T1_C_D": Strips("move_T1_C_D", {"at": {"T1": "C"}}, {"at": {"T1": "D"}}),
+    "move_T1_C_E": Strips("move_T1_C_E", {"at": {"T1": "C"}}, {"at": {"T1": "E"}}),
+    "move_T1_D_A": Strips("move_T1_D_A", {"at": {"T1": "D"}}, {"at": {"T1": "A"}}),
+    "move_T1_D_B": Strips("move_T1_D_B", {"at": {"T1": "D"}}, {"at": {"T1": "B"}}),
+    "move_T1_D_C": Strips("move_T1_D_C", {"at": {"T1": "D"}}, {"at": {"T1": "C"}}),
+    "move_T1_D_E": Strips("move_T1_D_E", {"at": {"T1": "D"}}, {"at": {"T1": "E"}}),
+    "move_T1_E_A": Strips("move_T1_E_A", {"at": {"T1": "E"}}, {"at": {"T1": "A"}}),
+    "move_T1_E_B": Strips("move_T1_E_B", {"at": {"T1": "E"}}, {"at": {"T1": "B"}}),
+    "move_T1_E_C": Strips("move_T1_E_C", {"at": {"T1": "E"}}, {"at": {"T1": "C"}}),
+    "move_T1_E_D": Strips("move_T1_E_D", {"at": {"T1": "E"}}, {"at": {"T1": "D"}}),
+    # Dodaj więcej kombinacji ruchów dla T2...
     "move_T2_A_B": Strips("move_T2_A_B", {"at": {"T2": "A"}}, {"at": {"T2": "B"}}),
     "move_T2_A_C": Strips("move_T2_A_C", {"at": {"T2": "A"}}, {"at": {"T2": "C"}}),
     
@@ -104,16 +116,25 @@ problem_3 = Planning_problem(logistics_domain, initial_state_3, goal_state_3)
 # 2. Rozwiązanie problemów metodą forward planning
 #############################
 
-def solve_problem(problem, with_heuristic=True, timeout=300):
-    print(f"\nRozwiązuję problem: {problem.initial} -> {problem.goal}")
+def solve_problem(problem, with_heuristic=True, timeout=10):
+    # Sprawdzamy poprawne nazwy atrybutów
+    initial_state = getattr(problem, "initial_state", None)
+    if initial_state is None:
+        initial_state = getattr(problem, "initial", {})
+        
+    goal_state = getattr(problem, "goal_state", None)
+    if goal_state is None:
+        goal_state = getattr(problem, "goal", {})
+        
+    print(f"\nRozwiązuję problem: {initial_state} -> {goal_state}")
     print(f"Używając heurystyki: {with_heuristic}")
     
     start_time = time.time()
     
     if with_heuristic:
-        solution = forward_plan_with_heuristic(problem, problem.initial, problem.goal, timeout)
+        solution = forward_plan_with_heuristic(problem, initial_state, goal_state, timeout)
     else:
-        solution = forward_plan_without_heuristic(problem, problem.initial, problem.goal, timeout)
+        solution = forward_plan_without_heuristic(problem, initial_state, goal_state, timeout)
     
     end_time = time.time()
     execution_time = end_time - start_time
@@ -128,7 +149,7 @@ def solve_problem(problem, with_heuristic=True, timeout=300):
     return solution, execution_time
 
 # Funkcja planowania bez heurystyki (dla porównania)
-def forward_plan_without_heuristic(problem, initial_state, goal_state, timeout=300):
+def forward_plan_without_heuristic(problem, initial_state, goal_state, timeout=10):
     start_time = time.time()
     actions_sequence = []
     current_state = dict(initial_state)
@@ -192,6 +213,124 @@ def forward_plan_without_heuristic(problem, initial_state, goal_state, timeout=3
     print(f"Przekroczono limit czasu {timeout} sekund")
     return actions_sequence if actions_sequence else None
 
+# Heurystyka - odległość Manhattan
+def manhattan_distance(state, goal_state, item):
+    if item not in state.get("at", {}) or state["at"][item] is None:
+        # Jeśli paczka jest w pojeździe, używamy lokalizacji pojazdu
+        for vehicle in ["T1", "T2"]:
+            if vehicle in state["at"]:
+                for package in state.get("in", {}):
+                    if state["in"].get(package, False) and item == package:
+                        start_location = state["at"][vehicle]
+                        goal_location = goal_state["at"][item]
+                        locations = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}
+                        return abs(locations[start_location] - locations[goal_location])
+        return 0
+    
+    start_location = state["at"][item]
+    goal_location = goal_state["at"][item]
+
+    locations = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}
+
+    return abs(locations[start_location] - locations[goal_location])
+
+# Funkcja rozwiązywania problemu za pomocą forward planning i heurystyki
+def forward_plan_with_heuristic(problem, initial_state, goal_state, timeout=10):
+    start_time = time.time()
+    actions_sequence = []
+    current_state = dict(initial_state)
+    
+    while time.time() - start_time < timeout:
+        # Sprawdź czy osiągnięto cel
+        goal_achieved = True
+        for feature, value in goal_state.items():
+            if feature in current_state:
+                for obj, target in value.items():
+                    if obj in current_state[feature] and current_state[feature][obj] != target:
+                        goal_achieved = False
+                        break
+            else:
+                goal_achieved = False
+                break
+            
+            if not goal_achieved:
+                break
+                
+        if goal_achieved:
+            return actions_sequence
+            
+        best_action = None
+        best_heuristic_value = float('inf')
+        
+        # Wybieramy najlepszą akcję opartą na heurystyce
+        for action_name, action in problem.prob_domain.actions.items():
+            # Sprawdzamy, czy akcja jest wykonalna w aktualnym stanie
+            action_applicable = True
+            
+            for feature, precond_value in action.preconds.items():
+                if feature not in current_state:
+                    action_applicable = False
+                    break
+                
+                for obj, value in precond_value.items():
+                    if obj not in current_state[feature] or current_state[feature][obj] != value:
+                        action_applicable = False
+                        break
+                
+                if not action_applicable:
+                    break
+                    
+            if action_applicable:
+                # Symuluj wykonanie akcji
+                new_state = {}
+                for feature, value in current_state.items():
+                    new_state[feature] = dict(value)  # Kopiujemy stan
+                    
+                # Zastosuj efekty akcji
+                for feature, effect_value in action.effects.items():
+                    if feature not in new_state:
+                        new_state[feature] = {}
+                        
+                    for obj, value in effect_value.items():
+                        if value is None:  # Usunięcie wartości
+                            if obj in new_state[feature]:
+                                del new_state[feature][obj]
+                        else:
+                            new_state[feature][obj] = value
+                            
+                # Oblicz wartość heurystyki dla nowego stanu
+                heuristic_value = 0
+                for item in goal_state.get("at", {}):
+                    heuristic_value += manhattan_distance(new_state, goal_state, item)
+                        
+                if heuristic_value < best_heuristic_value:
+                    best_heuristic_value = heuristic_value
+                    best_action = action
+                    
+        if not best_action:
+            print("Nie znaleziono wykonalnej akcji")
+            return None
+            
+        # Wykonaj najlepszą akcję
+        print(f"Wykonuję akcję: {best_action.name}")
+        actions_sequence.append(best_action)
+        
+        # Aktualizuj stan
+        for feature, effect_value in best_action.effects.items():
+            if feature not in current_state:
+                current_state[feature] = {}
+                
+            for obj, value in effect_value.items():
+                if value is None:  # Usunięcie wartości
+                    if obj in current_state[feature]:
+                        del current_state[feature][obj]
+                else:
+                    current_state[feature][obj] = value
+                    
+    # Timeout
+    print(f"Przekroczono limit czasu {timeout} sekund")
+    return actions_sequence if actions_sequence else None
+
 print("\n########## ROZWIĄZYWANIE PROBLEMÓW BEZ HEURYSTYKI ##########")
 for i, problem in enumerate([problem_1, problem_2, problem_3], 1):
     print(f"\nProblem {i}:")
@@ -225,6 +364,76 @@ for i, problem in enumerate([problem_1, problem_2, problem_3], 1):
 # 2. Definicja podcelów i rozwiązanie problemów z podcelami
 #############################
 
+# Funkcja rozwiązywania z podcelami - naprawiona wersja
+def solve_with_subgoals(problem, subgoals):
+    # Pobieramy poprawnie stan początkowy
+    initial_state = getattr(problem, "initial_state", None)
+    if initial_state is None:
+        initial_state = getattr(problem, "initial", {})
+    
+    current_state = dict(initial_state)
+    actions_sequence = []
+
+    for subgoal in subgoals:
+        print(f"Dążenie do podcelu: {subgoal}")
+        subproblem = Planning_problem(problem.prob_domain, current_state, subgoal)
+        solution = forward_plan_without_heuristic(subproblem, current_state, subgoal)
+        if solution:
+            actions_sequence.extend(solution)
+            # Aktualizacja stanu po osiągnięciu podcelu
+            for action in solution:
+                for feature, effect_value in action.effects.items():
+                    if feature not in current_state:
+                        current_state[feature] = {}
+                    
+                    for obj, value in effect_value.items():
+                        if value is None:
+                            if obj in current_state[feature]:
+                                del current_state[feature][obj]
+                        else:
+                            current_state[feature][obj] = value
+            print(f"Podcel osiągnięty. Aktualny stan: {current_state}")
+        else:
+            print("Nie udało się osiągnąć podcelu:", subgoal)
+            return None
+
+    return actions_sequence
+
+# Podobna poprawka dla funkcji z heurystyką
+def solve_with_subgoals_and_heuristic(problem, subgoals):
+    # Pobieramy poprawnie stan początkowy
+    initial_state = getattr(problem, "initial_state", None)
+    if initial_state is None:
+        initial_state = getattr(problem, "initial", {})
+    
+    current_state = dict(initial_state)
+    actions_sequence = []
+
+    for subgoal in subgoals:
+        print(f"Dążenie do podcelu z heurystyką: {subgoal}")
+        subproblem = Planning_problem(problem.prob_domain, current_state, subgoal)
+        solution = forward_plan_with_heuristic(subproblem, current_state, subgoal)
+        if solution:
+            actions_sequence.extend(solution)
+            # Aktualizacja stanu po osiągnięciu podcelu
+            for action in solution:
+                for feature, effect_value in action.effects.items():
+                    if feature not in current_state:
+                        current_state[feature] = {}
+                    
+                    for obj, value in effect_value.items():
+                        if value is None:
+                            if obj in current_state[feature]:
+                                del current_state[feature][obj]
+                        else:
+                            current_state[feature][obj] = value
+            print(f"Podcel osiągnięty. Aktualny stan: {current_state}")
+        else:
+            print("Nie udało się osiągnąć podcelu:", subgoal)
+            return None
+
+    return actions_sequence
+
 # Definicja podcelów dla każdego problemu
 subgoals_1 = [
     {"at": {"P1": "C"}},  # Podcel 1 - przenieś P1 do C
@@ -257,34 +466,6 @@ for i, (problem, subgoals) in enumerate(zip([problem_1, problem_2, problem_3],
         print(f"Nie udało się rozwiązać problemu z podcelami po {end_time - start_time:.2f} sekundach.")
 
 print("\n########## ROZWIĄZYWANIE PROBLEMÓW Z PODCELAMI Z HEURYSTYKĄ ##########")
-# Modyfikacja funkcji solve_with_subgoals, aby używała heurystyki
-def solve_with_subgoals_and_heuristic(problem, subgoals):
-    current_state = dict(problem.initial)
-    actions_sequence = []
-
-    for subgoal in subgoals:
-        subproblem = Planning_problem(problem.prob_domain, current_state, subgoal)
-        solution = forward_plan_with_heuristic(subproblem, current_state, subgoal)
-        if solution:
-            actions_sequence.extend(solution)
-            # Aktualizacja stanu po osiągnięciu podcelu
-            for action in solution:
-                for feature, effect_value in action.effects.items():
-                    if feature not in current_state:
-                        current_state[feature] = {}
-                    
-                    for obj, value in effect_value.items():
-                        if value is None:
-                            if obj in current_state[feature]:
-                                del current_state[feature][obj]
-                        else:
-                            current_state[feature][obj] = value
-        else:
-            print("Nie udało się osiągnąć podcelu:", subgoal)
-            return None
-
-    return actions_sequence
-
 for i, (problem, subgoals) in enumerate(zip([problem_1, problem_2, problem_3], 
                                          [subgoals_1, subgoals_2, subgoals_3]), 1):
     print(f"\nProblem {i} z podcelami i heurystyką:")
