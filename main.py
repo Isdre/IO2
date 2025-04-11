@@ -7,31 +7,41 @@ feature_domain_dict = {
     "in": {True, False}
 }
 
-# Akcje - poprawiona definicja
+# Akcje - zoptymalizowana definicja z ograniczoną liczbą ruchów
 actions = {
+    # Ograniczone ruchy dla T1 - eliminacja niektórych połączeń, by ograniczyć niepotrzebne ruchy
     "move_T1_A_B": Strips("move_T1_A_B", {"at": {"T1": "A"}}, {"at": {"T1": "B"}}),
     "move_T1_A_C": Strips("move_T1_A_C", {"at": {"T1": "A"}}, {"at": {"T1": "C"}}),
-    "move_T1_A_D": Strips("move_T1_A_D", {"at": {"T1": "A"}}, {"at": {"T1": "D"}}),
-    "move_T1_A_E": Strips("move_T1_A_E", {"at": {"T1": "A"}}, {"at": {"T1": "E"}}),
-    "move_T1_B_A": Strips("move_T1_B_A", {"at": {"T1": "B"}}, {"at": {"T1": "A"}}),
     "move_T1_B_C": Strips("move_T1_B_C", {"at": {"T1": "B"}}, {"at": {"T1": "C"}}),
-    "move_T1_B_D": Strips("move_T1_B_D", {"at": {"T1": "B"}}, {"at": {"T1": "D"}}),
     "move_T1_B_E": Strips("move_T1_B_E", {"at": {"T1": "B"}}, {"at": {"T1": "E"}}),
-    "move_T1_C_A": Strips("move_T1_C_A", {"at": {"T1": "C"}}, {"at": {"T1": "A"}}),
-    "move_T1_C_B": Strips("move_T1_C_B", {"at": {"T1": "C"}}, {"at": {"T1": "B"}}),
     "move_T1_C_D": Strips("move_T1_C_D", {"at": {"T1": "C"}}, {"at": {"T1": "D"}}),
     "move_T1_C_E": Strips("move_T1_C_E", {"at": {"T1": "C"}}, {"at": {"T1": "E"}}),
-    "move_T1_D_A": Strips("move_T1_D_A", {"at": {"T1": "D"}}, {"at": {"T1": "A"}}),
-    "move_T1_D_B": Strips("move_T1_D_B", {"at": {"T1": "D"}}, {"at": {"T1": "B"}}),
-    "move_T1_D_C": Strips("move_T1_D_C", {"at": {"T1": "D"}}, {"at": {"T1": "C"}}),
     "move_T1_D_E": Strips("move_T1_D_E", {"at": {"T1": "D"}}, {"at": {"T1": "E"}}),
-    "move_T1_E_A": Strips("move_T1_E_A", {"at": {"T1": "E"}}, {"at": {"T1": "A"}}),
+    
+    # Powrotne ruchy (tylko istotne)
+    "move_T1_C_A": Strips("move_T1_C_A", {"at": {"T1": "C"}}, {"at": {"T1": "A"}}),
+    "move_T1_C_B": Strips("move_T1_C_B", {"at": {"T1": "C"}}, {"at": {"T1": "B"}}),
+    "move_T1_D_C": Strips("move_T1_D_C", {"at": {"T1": "D"}}, {"at": {"T1": "C"}}),
     "move_T1_E_B": Strips("move_T1_E_B", {"at": {"T1": "E"}}, {"at": {"T1": "B"}}),
     "move_T1_E_C": Strips("move_T1_E_C", {"at": {"T1": "E"}}, {"at": {"T1": "C"}}),
     "move_T1_E_D": Strips("move_T1_E_D", {"at": {"T1": "E"}}, {"at": {"T1": "D"}}),
-    # Dodaj więcej kombinacji ruchów dla T2...
+    
+    # Podobnie ograniczone ruchy dla T2
     "move_T2_A_B": Strips("move_T2_A_B", {"at": {"T2": "A"}}, {"at": {"T2": "B"}}),
     "move_T2_A_C": Strips("move_T2_A_C", {"at": {"T2": "A"}}, {"at": {"T2": "C"}}),
+    "move_T2_B_C": Strips("move_T2_B_C", {"at": {"T2": "B"}}, {"at": {"T2": "C"}}),
+    "move_T2_B_E": Strips("move_T2_B_E", {"at": {"T2": "B"}}, {"at": {"T2": "E"}}),
+    "move_T2_C_D": Strips("move_T2_C_D", {"at": {"T2": "C"}}, {"at": {"T2": "D"}}),
+    "move_T2_C_E": Strips("move_T2_C_E", {"at": {"T2": "C"}}, {"at": {"T2": "E"}}),
+    "move_T2_D_E": Strips("move_T2_D_E", {"at": {"T2": "D"}}, {"at": {"T2": "E"}}),
+    
+    # Powrotne ruchy (tylko istotne)
+    "move_T2_C_A": Strips("move_T2_C_A", {"at": {"T2": "C"}}, {"at": {"T2": "A"}}),
+    "move_T2_C_B": Strips("move_T2_C_B", {"at": {"T2": "C"}}, {"at": {"T2": "B"}}),
+    "move_T2_D_C": Strips("move_T2_D_C", {"at": {"T2": "D"}}, {"at": {"T2": "C"}}),
+    "move_T2_E_B": Strips("move_T2_E_B", {"at": {"T2": "E"}}, {"at": {"T2": "B"}}),
+    "move_T2_E_C": Strips("move_T2_E_C", {"at": {"T2": "E"}}, {"at": {"T2": "C"}}),
+    "move_T2_E_D": Strips("move_T2_E_D", {"at": {"T2": "E"}}, {"at": {"T2": "D"}}),
     
     # Akcje ładowania paczek
     "load_P1_T1_A": Strips("load_P1_T1_A", 
@@ -117,15 +127,13 @@ problem_3 = Planning_problem(logistics_domain, initial_state_3, goal_state_3)
 #############################
 
 def solve_problem(problem, with_heuristic=True, timeout=10):
-    # Sprawdzamy poprawne nazwy atrybutów
     initial_state = getattr(problem, "initial_state", None)
     if initial_state is None:
         initial_state = getattr(problem, "initial", {})
-        
     goal_state = getattr(problem, "goal_state", None)
     if goal_state is None:
         goal_state = getattr(problem, "goal", {})
-        
+    
     print(f"\nRozwiązuję problem: {initial_state} -> {goal_state}")
     print(f"Używając heurystyki: {with_heuristic}")
     
@@ -151,16 +159,27 @@ def solve_problem(problem, with_heuristic=True, timeout=10):
 # Funkcja planowania bez heurystyki (dla porównania)
 def forward_plan_without_heuristic(problem, initial_state, goal_state, timeout=10):
     start_time = time.time()
-    actions_sequence = []
-    current_state = dict(initial_state)
     
-    while time.time() - start_time < timeout:
+    # Używamy kolejki i visited set do uniknięcia zapętlenia
+    state_queue = [(dict(initial_state), [])]  # (stan, akcje)
+    visited_states = set()  # zbiór odwiedzonych stanów
+    
+    while state_queue and time.time() - start_time < timeout:
+        current_state, actions_sequence = state_queue.pop(0)
+        
+        # Konwertuj stan na hashowalne tuple dla visited_states
+        state_hash = convert_state_to_hashable(current_state)
+        if state_hash in visited_states:
+            continue
+            
+        visited_states.add(state_hash)
+        
         # Sprawdź czy osiągnięto cel
         goal_achieved = True
         for feature, value in goal_state.items():
             if feature in current_state:
                 for obj, target in value.items():
-                    if obj in current_state[feature] and current_state[feature][obj] != target:
+                    if obj not in current_state[feature] or current_state[feature][obj] != target:
                         goal_achieved = False
                         break
             else:
@@ -172,8 +191,9 @@ def forward_plan_without_heuristic(problem, initial_state, goal_state, timeout=1
                 
         if goal_achieved:
             return actions_sequence
-            
-        # Bez heurystyki - bierzemy pierwszą wykonalną akcję
+        
+        # Zbierz wykonalne akcje
+        applicable_actions = []
         for action_name, action in problem.prob_domain.actions.items():
             action_applicable = True
             
@@ -191,27 +211,43 @@ def forward_plan_without_heuristic(problem, initial_state, goal_state, timeout=1
                     break
                     
             if action_applicable:
-                print(f"Wykonuję akcję: {action.name}")
-                actions_sequence.append(action)
+                applicable_actions.append(action)
+        
+        # Dla każdej wykonalnej akcji, dodaj nowy stan do kolejki
+        for action in applicable_actions:
+            new_state = {}
+            for feature, value in current_state.items():
+                new_state[feature] = dict(value)  # Kopiujemy stan
                 
-                # Aktualizuj stan
-                for feature, effect_value in action.effects.items():
-                    if feature not in current_state:
-                        current_state[feature] = {}
-                        
-                    for obj, value in effect_value.items():
-                        if value is None:
-                            if obj in current_state[feature]:
-                                del current_state[feature][obj]
-                        else:
-                            current_state[feature][obj] = value
-                break
-        else:
-            print("Nie znaleziono wykonalnej akcji")
-            return None
-                
-    print(f"Przekroczono limit czasu {timeout} sekund")
-    return actions_sequence if actions_sequence else None
+            # Zastosuj efekty akcji
+            for feature, effect_value in action.effects.items():
+                if feature not in new_state:
+                    new_state[feature] = {}
+                    
+                for obj, value in effect_value.items():
+                    if value is None:
+                        if obj in new_state[feature]:
+                            del new_state[feature][obj]
+                    else:
+                        new_state[feature][obj] = value
+            
+            new_actions = actions_sequence + [action]
+            state_queue.append((new_state, new_actions))
+    
+    print(f"Przekroczono limit czasu {timeout} sekund lub brak rozwiązania")
+    return None
+
+def convert_state_to_hashable(state):
+    """Konwertuje stan na hashowalne tuple do użycia w zbiorze visited_states"""
+    result = []
+    for feature in sorted(state.keys()):
+        feature_dict = state[feature]
+        feature_items = []
+        for obj in sorted(feature_dict.keys()):
+            value = feature_dict[obj]
+            feature_items.append((obj, value))
+        result.append((feature, tuple(feature_items)))
+    return tuple(result)
 
 # Heurystyka - odległość Manhattan
 def manhattan_distance(state, goal_state, item):
@@ -246,7 +282,7 @@ def forward_plan_with_heuristic(problem, initial_state, goal_state, timeout=10):
         for feature, value in goal_state.items():
             if feature in current_state:
                 for obj, target in value.items():
-                    if obj in current_state[feature] and current_state[feature][obj] != target:
+                    if obj not in current_state[feature] or current_state[feature][obj] != target:
                         goal_achieved = False
                         break
             else:
@@ -331,6 +367,45 @@ def forward_plan_with_heuristic(problem, initial_state, goal_state, timeout=10):
     print(f"Przekroczono limit czasu {timeout} sekund")
     return actions_sequence if actions_sequence else None
 
+def solve_with_subgoals(problem, subgoals, with_heuristic=False):
+    # Pobieramy poprawnie stan początkowy
+    initial_state = getattr(problem, "initial_state", None)
+    if initial_state is None:
+        initial_state = getattr(problem, "initial", {})
+    
+    current_state = dict(initial_state)
+    actions_sequence = []
+
+    for subgoal in subgoals:
+        print(f"Dążenie do podcelu: {subgoal}")
+        subproblem = Planning_problem(problem.prob_domain, current_state, subgoal)
+        
+        if with_heuristic:
+            solution = forward_plan_with_heuristic(subproblem, current_state, subgoal)
+        else:
+            solution = forward_plan_without_heuristic(subproblem, current_state, subgoal)
+            
+        if solution:
+            actions_sequence.extend(solution)
+            # Aktualizacja stanu po osiągnięciu podcelu
+            for action in solution:
+                for feature, effect_value in action.effects.items():
+                    if feature not in current_state:
+                        current_state[feature] = {}
+                    
+                    for obj, value in effect_value.items():
+                        if value is None:
+                            if obj in current_state[feature]:
+                                del current_state[feature][obj]
+                        else:
+                            current_state[feature][obj] = value
+            print(f"Podcel osiągnięty. Aktualny stan: {current_state}")
+        else:
+            print("Nie udało się osiągnąć podcelu:", subgoal)
+            return None
+
+    return actions_sequence
+
 print("\n########## ROZWIĄZYWANIE PROBLEMÓW BEZ HEURYSTYKI ##########")
 for i, problem in enumerate([problem_1, problem_2, problem_3], 1):
     print(f"\nProblem {i}:")
@@ -364,76 +439,6 @@ for i, problem in enumerate([problem_1, problem_2, problem_3], 1):
 # 2. Definicja podcelów i rozwiązanie problemów z podcelami
 #############################
 
-# Funkcja rozwiązywania z podcelami - naprawiona wersja
-def solve_with_subgoals(problem, subgoals):
-    # Pobieramy poprawnie stan początkowy
-    initial_state = getattr(problem, "initial_state", None)
-    if initial_state is None:
-        initial_state = getattr(problem, "initial", {})
-    
-    current_state = dict(initial_state)
-    actions_sequence = []
-
-    for subgoal in subgoals:
-        print(f"Dążenie do podcelu: {subgoal}")
-        subproblem = Planning_problem(problem.prob_domain, current_state, subgoal)
-        solution = forward_plan_without_heuristic(subproblem, current_state, subgoal)
-        if solution:
-            actions_sequence.extend(solution)
-            # Aktualizacja stanu po osiągnięciu podcelu
-            for action in solution:
-                for feature, effect_value in action.effects.items():
-                    if feature not in current_state:
-                        current_state[feature] = {}
-                    
-                    for obj, value in effect_value.items():
-                        if value is None:
-                            if obj in current_state[feature]:
-                                del current_state[feature][obj]
-                        else:
-                            current_state[feature][obj] = value
-            print(f"Podcel osiągnięty. Aktualny stan: {current_state}")
-        else:
-            print("Nie udało się osiągnąć podcelu:", subgoal)
-            return None
-
-    return actions_sequence
-
-# Podobna poprawka dla funkcji z heurystyką
-def solve_with_subgoals_and_heuristic(problem, subgoals):
-    # Pobieramy poprawnie stan początkowy
-    initial_state = getattr(problem, "initial_state", None)
-    if initial_state is None:
-        initial_state = getattr(problem, "initial", {})
-    
-    current_state = dict(initial_state)
-    actions_sequence = []
-
-    for subgoal in subgoals:
-        print(f"Dążenie do podcelu z heurystyką: {subgoal}")
-        subproblem = Planning_problem(problem.prob_domain, current_state, subgoal)
-        solution = forward_plan_with_heuristic(subproblem, current_state, subgoal)
-        if solution:
-            actions_sequence.extend(solution)
-            # Aktualizacja stanu po osiągnięciu podcelu
-            for action in solution:
-                for feature, effect_value in action.effects.items():
-                    if feature not in current_state:
-                        current_state[feature] = {}
-                    
-                    for obj, value in effect_value.items():
-                        if value is None:
-                            if obj in current_state[feature]:
-                                del current_state[feature][obj]
-                        else:
-                            current_state[feature][obj] = value
-            print(f"Podcel osiągnięty. Aktualny stan: {current_state}")
-        else:
-            print("Nie udało się osiągnąć podcelu:", subgoal)
-            return None
-
-    return actions_sequence
-
 # Definicja podcelów dla każdego problemu
 subgoals_1 = [
     {"at": {"P1": "C"}},  # Podcel 1 - przenieś P1 do C
@@ -453,9 +458,9 @@ subgoals_3 = [
 print("\n########## ROZWIĄZYWANIE PROBLEMÓW Z PODCELAMI BEZ HEURYSTYKI ##########")
 for i, (problem, subgoals) in enumerate(zip([problem_1, problem_2, problem_3], 
                                          [subgoals_1, subgoals_2, subgoals_3]), 1):
-    print(f"\nProblem {i} z podcelami:")
+    print(f"\nProblem {i} z podcelami (bez heurystyki):")
     start_time = time.time()
-    solution_with_subgoals = solve_with_subgoals(problem, subgoals)
+    solution_with_subgoals = solve_with_subgoals(problem, subgoals, with_heuristic=False)
     end_time = time.time()
     
     if solution_with_subgoals:
@@ -468,9 +473,9 @@ for i, (problem, subgoals) in enumerate(zip([problem_1, problem_2, problem_3],
 print("\n########## ROZWIĄZYWANIE PROBLEMÓW Z PODCELAMI Z HEURYSTYKĄ ##########")
 for i, (problem, subgoals) in enumerate(zip([problem_1, problem_2, problem_3], 
                                          [subgoals_1, subgoals_2, subgoals_3]), 1):
-    print(f"\nProblem {i} z podcelami i heurystyką:")
+    print(f"\nProblem {i} z podcelami (z heurystyką):")
     start_time = time.time()
-    solution_with_subgoals = solve_with_subgoals_and_heuristic(problem, subgoals)
+    solution_with_subgoals = solve_with_subgoals(problem, subgoals, with_heuristic=True)
     end_time = time.time()
     
     if solution_with_subgoals:
@@ -547,7 +552,7 @@ for i, (problem, subgoals) in enumerate(zip(
     
     print(f"\nProblem {i} (złożony) z podcelami i heurystyką:")
     start_time = time.time()
-    solution_with_subgoals = solve_with_subgoals_and_heuristic(problem, subgoals)
+    solution_with_subgoals = solve_with_subgoals(problem, subgoals, with_heuristic=True)  # Z heurystyką
     end_time = time.time()
     
     if solution_with_subgoals:
